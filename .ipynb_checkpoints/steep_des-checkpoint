@@ -1,0 +1,280 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Steepest descent method"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import numpy as np\n",
+    "import numpy.linalg as la\n",
+    "import scipy.optimize as sopt\n",
+    "import matplotlib.pyplot as plt"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def func_multivar(x):\n",
+    "    # fx = 100*(x[1]-x[0]**2)**2 + (1 - x[0])**2\n",
+    "    fx = 100*(np.sqrt(x[0]**2+(x[1]+1)**2)-1)**2 + 90*(np.sqrt(x[0]**2+(x[1]-1)**2)-1)**2 -(20*x[0]+40*x[1])\n",
+    "    return fx"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def grad_vec(x, delx, n_of_var):\n",
+    "    xvec = np.asarray(x).astype(np.float32)\n",
+    "    xvec1 = np.asarray(x).astype(np.float32)\n",
+    "    deriv = []\n",
+    "    for i in range(0,len(x)):\n",
+    "        xvec = np.asarray(x).astype(np.float32)\n",
+    "        xvec1 = np.asarray(x).astype(np.float32)\n",
+    "        \n",
+    "        xvec[i] = x[i] + delx\n",
+    "        xvec1[i] = x[i] - delx\n",
+    "        deriv.append((func_multivar(xvec) - func_multivar(xvec1))/(2*delx))\n",
+    "    return np.array(deriv)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def golden_funct1(x, search):\n",
+    "    a = -5\n",
+    "    b = 5\n",
+    "    tau = 0.381967\n",
+    "    epsilon = 1e-5\n",
+    "    alpha1 = a*(1 - tau) + b*tau\n",
+    "    alpha2 = a*tau + b*(1 - tau)\n",
+    "    falpha1 = func_multivar(x + alpha1*search)\n",
+    "    falpha2 = func_multivar(x + alpha2*search)\n",
+    "    for _ in range(0, 1000):\n",
+    "        if falpha1 > falpha2:\n",
+    "            a = alpha1\n",
+    "            alpha1 = alpha2\n",
+    "            falpha1 = falpha2\n",
+    "            alpha2 = tau*a + (1 - tau)*b\n",
+    "            falpha2 = func_multivar(x + alpha2*search)\n",
+    "        else:\n",
+    "            b = alpha2\n",
+    "            alpha2  = alpha1\n",
+    "            falpha2 = falpha1\n",
+    "            alpha1  = tau*b + (1 - tau)*a\n",
+    "            falpha1 = func_multivar(x + alpha1*search)\n",
+    "        if abs(func_multivar(x + alpha1*search) - func_multivar(x + alpha2*search)) < epsilon:\n",
+    "            break\n",
+    "    return alpha1, falpha1"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Initial function value = 132.786 \n",
+      " No.\tx-vector\tf(x)\tDeriv \n",
+      "------------------------------------------\n",
+      "[ 130.55950729 -181.11763666]\n",
+      "0\t[-0.322,0.059]\t5.216\t223.270\n",
+      "[25.88739907 18.59291326]\n",
+      "1\t[-0.153,0.180]\t1.948\t31.872\n",
+      "[ 19.40724638 -27.04093225]\n",
+      "2\t[-0.073,0.068]\t-0.385\t33.284\n",
+      "[20.04531378 14.32174084]\n",
+      "3\t[0.088,0.183]\t-2.763\t24.636\n",
+      "[ 20.66723099 -28.86947818]\n",
+      "4\t[0.168,0.071]\t-5.206\t35.505\n",
+      "[19.18170236 13.64834772]\n",
+      "5\t[0.320,0.179]\t-7.384\t23.542\n",
+      "[ 16.13462102 -22.67416426]\n",
+      "6\t[0.382,0.093]\t-8.841\t27.829\n",
+      "[10.72100256  7.59407543]\n",
+      "7\t[0.454,0.144]\t-9.425\t13.138\n",
+      "[ 5.60026757 -7.90675011]\n",
+      "8\t[0.475,0.114]\t-9.605\t9.689\n",
+      "[2.9594593 2.0147732]\n",
+      "9\t[0.494,0.127]\t-9.646\t3.580\n",
+      "[ 1.18528319 -1.71107484]\n",
+      "10\t[0.499,0.120]\t-9.654\t2.082\n",
+      "[0.58723894 0.38633716]\n",
+      "11\t[0.502,0.123]\t-9.656\t0.703\n",
+      "[ 0.23437899 -0.27989703]\n",
+      "12\t[0.503,0.122]\t-9.656\t0.365\n",
+      "[0.12277612 0.05115943]\n",
+      "------------------------------------------\n"
+     ]
+    }
+   ],
+   "source": [
+    "n_of_var = 2\n",
+    "x = [-1, 1]\n",
+    "epsilon1 = 0.0001\n",
+    "epsilon2 = 0.0001\n",
+    "delx = 0.001\n",
+    "\n",
+    "falpha_prev = func_multivar(x)\n",
+    "print('Initial function value = {0:.3f} '.format(falpha_prev))\n",
+    "print(' No.\\tx-vector\\tf(x)\\tDeriv ')\n",
+    "print('------------------------------------------')\n",
+    "for i in range(0, 3000):\n",
+    "    deriv = grad_vec(x,delx,n_of_var)\n",
+    "    \n",
+    "    search = -deriv\n",
+    "    print(search)\n",
+    "    alpha, falpha = golden_funct1(x, search)\n",
+    "    if np.abs(falpha - falpha_prev) < epsilon1 or la.norm(deriv) < epsilon2:\n",
+    "        break\n",
+    "    falpha_prev = falpha\n",
+    "    x = x + alpha*search\n",
+    "    print('{0}\\t[{1:.3f},{2:.3f}]\\t{3:.3f}\\t{4:.3f}'.format(i,x[0], x[1],falpha,la.norm(deriv)))\n",
+    "\n",
+    "print('------------------------------------------')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from mpl_toolkits.mplot3d import Axes3D\n",
+    "import itertools\n",
+    "import scipy.optimize as sopt"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "A = np.matrix([[3.0, 2.0], [2.0, 6.0]])\n",
+    "b = np.matrix([[2.0], [-8.0]])\n",
+    "c = 0.0"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def bowl(A, b, c):\n",
+    "    fig = plt.figure(figsize=(10,8))\n",
+    "    qf = fig.gca(projection='3d')\n",
+    "    size = 20\n",
+    "    x1 = list(np.linspace(-6, 6, size))\n",
+    "    x2 = list(np.linspace(-6, 6, size))\n",
+    "    x1, x2 = np.meshgrid(x1, x2)\n",
+    "    zs = np.zeros((size, size))\n",
+    "    for i in range(size):\n",
+    "        for j in range(size):\n",
+    "            x = np.matrix([[x1[i,j]], [x2[i,j]]])\n",
+    "            zs[i,j] = func_multivar(x)\n",
+    "    qf.plot_surface(x1, x2, zs, rstride=1, cstride=1, cmap='coolwarm', linewidth=0)\n",
+    "    fig.show()\n",
+    "    return x1, x2, zs"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "x1, x2, zs = bowl(A, b, c)\n",
+    "# print(\"x1: {0}\\nx2: {1}\\nz: {2}\".format(x1, x2, zs))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def contoursteps(x1, x2, zs, steps=None):\n",
+    "    fig = plt.figure(figsize=(6,6))\n",
+    "    cp = plt.contour(x1, x2, zs, 10)\n",
+    "    plt.clabel(cp, inline=1, fontsize=10)\n",
+    "    if steps is not None:\n",
+    "        steps = np.matrix(steps)\n",
+    "        plt.plot(steps[:,0], steps[:,1], '-o')\n",
+    "    fig.show()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "x = np.matrix([[-2.0],[-2.0]])\n",
+    "steps = [(-3.0, 2.0)]\n",
+    "i = 0\n",
+    "imax = 10\n",
+    "eps = 0.01\n",
+    "r = b - A * x\n",
+    "delta = r.T * r\n",
+    "delta0 = delta\n",
+    "while i < imax and delta > eps**2 * delta0:\n",
+    "    alpha = float(delta / (r.T * (A * r)))\n",
+    "    x = x + alpha * r\n",
+    "    steps.append((x[0,0], x[1,0]))  # store steps for future drawing\n",
+    "    r = b - A * x\n",
+    "    delta = r.T * r\n",
+    "    i += 1\n",
+    "contoursteps(x1, x2, zs, steps)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.6.9"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 4
+}
